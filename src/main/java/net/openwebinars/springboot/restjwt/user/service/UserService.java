@@ -9,8 +9,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.EnumSet;
-import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -20,7 +20,7 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
 
-    public User createUser(CreateUserRequest createUserRequest, EnumSet<UserRole> roles) {
+    public User createUser(CreateUserRequest createUserRequest, Set<UserRole> roles) {
         User user =  User.builder()
                 .username(createUserRequest.getUsername())
                 .password(passwordEncoder.encode(createUserRequest.getPassword()))
@@ -40,10 +40,6 @@ public class UserService {
         return createUser(createUserRequest, EnumSet.of(UserRole.ADMIN));
     }
 
-    public List<User> findAll() {
-        return userRepository.findAll();
-    }
-
     public Optional<User> findById(UUID id) {
         return userRepository.findById(id);
     }
@@ -54,27 +50,27 @@ public class UserService {
 
     public Optional<User> edit(User user) {
 
-        // El username no se puede editar
-        // La contraseña se edita en otro método
+        // Username cannot be edited
+        // Password is edited in another method
 
         return userRepository.findById(user.getId())
                 .map(u -> {
                     u.setAvatar(user.getAvatar());
                     u.setFullName(user.getFullName());
                     return userRepository.save(u);
-                }).or(() -> Optional.empty());
+                }).or(Optional::empty);
 
     }
 
     public Optional<User> editPassword(UUID userId, String newPassword) {
 
-        // Aquí no se realizan comprobaciones de seguridad. Tan solo se modifica
+        // No security checks are performed here. It is only modified
 
         return userRepository.findById(userId)
                 .map(u -> {
                     u.setPassword(passwordEncoder.encode(newPassword));
                     return userRepository.save(u);
-                }).or(() -> Optional.empty());
+                }).or(Optional::empty);
 
     }
 
@@ -83,7 +79,7 @@ public class UserService {
     }
 
     public void deleteById(UUID id) {
-        // Prevenimos errores al intentar borrar algo que no existe
+        // We prevent errors when trying to delete something that does not exist
         if (userRepository.existsById(id))
             userRepository.deleteById(id);
     }

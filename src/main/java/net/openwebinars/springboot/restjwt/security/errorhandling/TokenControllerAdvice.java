@@ -13,14 +13,14 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 
 @RestControllerAdvice
 public class TokenControllerAdvice  {
 
     @ExceptionHandler({ AuthenticationException.class })
-    public ResponseEntity<?> handleAuthenticationException(AuthenticationException ex, HttpServletRequest request) {
+    public ResponseEntity<ErrorMessage> handleAuthenticationException(AuthenticationException ex, HttpServletRequest request) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .header("WWW-Authenticate", "Bearer")
                 .body(ErrorMessage.of(HttpStatus.UNAUTHORIZED, ex.getMessage(), request.getRequestURI()));
@@ -28,21 +28,20 @@ public class TokenControllerAdvice  {
     }
 
     @ExceptionHandler({ AccessDeniedException.class })
-    public ResponseEntity<?> handleAccessDeniedException(AccessDeniedException ex, HttpServletRequest request) {
+    public ResponseEntity<ErrorMessage> handleAccessDeniedException(AccessDeniedException ex, HttpServletRequest request) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
                 .body(ErrorMessage.of(HttpStatus.FORBIDDEN, ex.getMessage(), request.getRequestURI()));
 
     }
 
-
     @ExceptionHandler({JwtTokenException.class})
-    public ResponseEntity<?> handleTokenException(JwtTokenException ex, HttpServletRequest request) {
+    public ResponseEntity<ErrorMessage> handleTokenException(JwtTokenException ex, HttpServletRequest request) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
                 .body(ErrorMessage.of(HttpStatus.FORBIDDEN, ex.getMessage(), request.getRequestURI()));
     }
 
     @ExceptionHandler({UsernameNotFoundException.class})
-    public ResponseEntity<?> handleUserNotExistsException(UsernameNotFoundException ex, HttpServletRequest request) {
+    public ResponseEntity<ErrorMessage> handleUserNotExistsException(UsernameNotFoundException ex, HttpServletRequest request) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(ErrorMessage.of(
                         HttpStatus.UNAUTHORIZED,
@@ -58,7 +57,8 @@ public class TokenControllerAdvice  {
     public static class ErrorMessage {
 
         private HttpStatus status;
-        private String message, path;
+        private String message;
+        private String path;
 
         @Builder.Default
         @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy hh:mm:ss")
@@ -73,6 +73,5 @@ public class TokenControllerAdvice  {
         }
 
     }
-
 
 }

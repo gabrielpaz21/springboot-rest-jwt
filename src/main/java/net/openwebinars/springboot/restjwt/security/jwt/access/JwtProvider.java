@@ -1,22 +1,16 @@
 package net.openwebinars.springboot.restjwt.security.jwt.access;
 
-
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
-import io.jsonwebtoken.security.SignatureException;
 import lombok.extern.java.Log;
 import net.openwebinars.springboot.restjwt.security.errorhandling.JwtTokenException;
 import net.openwebinars.springboot.restjwt.user.model.User;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.neo4j.Neo4jProperties;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
-
-
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 import javax.crypto.SecretKey;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
@@ -46,11 +40,10 @@ public class JwtProvider {
 
         secretKey = Keys.hmacShaKeyFor(jwtSecret.getBytes());
 
-        jwtParser = Jwts.parserBuilder()
-                .setSigningKey(secretKey)
+        jwtParser = Jwts.parser()
+                .verifyWith(secretKey)
                 .build();
     }
-
 
     public String generateToken(Authentication authentication) {
 
@@ -72,36 +65,33 @@ public class JwtProvider {
                 );
 
         return Jwts.builder()
-                .setHeaderParam("typ", TOKEN_TYPE)
-                .setSubject(user.getId().toString())
-                .setIssuedAt(new Date())
-                .setExpiration(tokenExpirationDateTime)
+                .header()
+                    .add("typ", TOKEN_TYPE)
+                .and()
+                .subject(user.getId().toString())
+                .issuedAt(new Date())
+                .expiration(tokenExpirationDateTime)
                 .signWith(secretKey)
                 .compact();
 
     }
 
-
     public UUID getUserIdFromJwtToken(String token) {
         return UUID.fromString(
-                jwtParser.parseClaimsJws(token).getBody().getSubject()
+                jwtParser.parseSignedClaims(token).getPayload().getSubject()
         );
     }
-
 
     public boolean validateToken(String token) {
 
         try {
-            jwtParser.parseClaimsJws(token);
+            jwtParser.parseSignedClaims(token);
             return true;
-        } catch (SignatureException | MalformedJwtException | ExpiredJwtException | UnsupportedJwtException | IllegalArgumentException ex) {
+        } catch (JwtException | IllegalArgumentException ex) {
             log.info("Error con el token: " + ex.getMessage());
             throw new JwtTokenException(ex.getMessage());
         }
-        //return false;
 
     }
-
-
 
 }

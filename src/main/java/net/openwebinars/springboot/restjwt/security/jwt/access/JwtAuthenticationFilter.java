@@ -1,12 +1,12 @@
 package net.openwebinars.springboot.restjwt.security.jwt.access;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.java.Log;
 import net.openwebinars.springboot.restjwt.security.errorhandling.JwtTokenException;
 import net.openwebinars.springboot.restjwt.user.model.User;
 import net.openwebinars.springboot.restjwt.user.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetails;
@@ -15,30 +15,35 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Optional;
 import java.util.UUID;
 
 @Log
 @Component
-@RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final UserService userService;
     private final JwtProvider jwtProvider;
+    private final HandlerExceptionResolver resolver;
 
     @Autowired
-    @Qualifier("handlerExceptionResolver")
-    private HandlerExceptionResolver resolver;
-
-
+    public JwtAuthenticationFilter(UserService userService,
+                                   JwtProvider jwtProvider,
+                                   @Qualifier("handlerExceptionResolver") HandlerExceptionResolver resolver) {
+        this.userService = userService;
+        this.jwtProvider = jwtProvider;
+        this.resolver = resolver;
+    }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(@NonNull HttpServletRequest request,
+                                    @NonNull HttpServletResponse response,
+                                    @NonNull FilterChain filterChain) throws ServletException, IOException {
 
         String token = getJwtTokenFromRequest(request);
 
@@ -72,8 +77,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             resolver.resolveException(request, response, null, ex);
         }
 
-
-
     }
 
     private String getJwtTokenFromRequest(HttpServletRequest request) {
@@ -83,4 +86,5 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
         return null;
     }
+
 }

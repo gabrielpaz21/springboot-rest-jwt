@@ -5,7 +5,7 @@ import net.openwebinars.springboot.restjwt.user.model.User;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import javax.transaction.Transactional;
+import jakarta.transaction.Transactional;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
@@ -29,7 +29,7 @@ public class RefreshTokenService {
 
         refreshToken.setUser(user);
         refreshToken.setToken(UUID.randomUUID().toString());
-        refreshToken.setExpiryDate(Instant.now().plusSeconds(durationInMinutes * 60));
+        refreshToken.setExpiryDate(Instant.now().plusSeconds(60L * durationInMinutes));
 
         refreshToken = refreshTokenRepository.save(refreshToken);
 
@@ -41,19 +41,17 @@ public class RefreshTokenService {
     public RefreshToken verify(RefreshToken refreshToken) {
 
         if (refreshToken.getExpiryDate().compareTo(Instant.now()) < 0) {
-            // Token de refresco caducado. Lo eliminamos y lanzamos excepción
+            // Expired refresh token. We delete it and throw exception
             refreshTokenRepository.delete(refreshToken);
             throw new RefreshTokenException("Expired refresh token: " + refreshToken.getToken() + ". Please, login again");
         }
 
         return refreshToken;
-
-
     }
 
     @Transactional
-    public int deleteByUser(User user) {
-        return refreshTokenRepository.deleteByUser(user);
+    public void deleteByUser(User user) {
+        refreshTokenRepository.deleteByUser(user);
     }
 
 }

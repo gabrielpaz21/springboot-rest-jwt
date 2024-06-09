@@ -30,20 +30,17 @@ public class UserController {
     private final JwtProvider jwtProvider;
     private final RefreshTokenService refreshTokenService;
 
-
     @PostMapping("/auth/register")
     public ResponseEntity<UserResponse> createUserWithUserRole(@RequestBody CreateUserRequest createUserRequest) {
         User user = userService.createUserWithUserRole(createUserRequest);
-
         return ResponseEntity.status(HttpStatus.CREATED).body(UserResponse.fromUser(user));
     }
 
-    // Más adelante podemos manejar la seguridad de acceso a esta petición
+    // Later we can handle the security of access to this request
 
     @PostMapping("/auth/register/admin")
     public ResponseEntity<UserResponse> createUserWithAdminRole(@RequestBody CreateUserRequest createUserRequest) {
         User user = userService.createUserWithAdminRole(createUserRequest);
-
         return ResponseEntity.status(HttpStatus.CREATED).body(UserResponse.fromUser(user));
     }
 
@@ -51,7 +48,7 @@ public class UserController {
     @PostMapping("/auth/login")
     public ResponseEntity<JwtUserResponse> login(@RequestBody LoginRequest loginRequest) {
 
-        // Realizamos la autenticación
+        // We perform authentication
 
         Authentication authentication =
                 authManager.authenticate(
@@ -61,15 +58,16 @@ public class UserController {
                         )
                 );
 
-        // Una vez realizada, la guardamos en el contexto de seguridad
+        // Once done, we save it in the security context
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        // Devolvemos una respuesta adecuada
+        // We return an appropriate response
         String token = jwtProvider.generateToken(authentication);
 
         User user = (User) authentication.getPrincipal();
 
-        // Eliminamos el token (si existe) antes de crearlo, ya que cada usuario debería tener solamente un token de refresco simultáneo
+        // We remove the token (if it exists) before creating it,
+        // since each user should only have one concurrent refresh token
         refreshTokenService.deleteByUser(user);
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
 
@@ -100,24 +98,22 @@ public class UserController {
 
     }
 
-
-
     @PutMapping("/user/changePassword")
     public ResponseEntity<UserResponse> changePassword(@RequestBody ChangePasswordRequest changePasswordRequest,
                                                        @AuthenticationPrincipal User loggedUser) {
 
-        // Este código es mejorable.
-        // La validación de la contraseña nueva se puede hacer con un validador.
-        // La gestión de errores se puede hacer con excepciones propias
+        // This code can be improved.
+        // Validation of the new password can be done with a validator.
+        // Error handling can be done with its own exceptions
         try {
             if (userService.passwordMatch(loggedUser, changePasswordRequest.getOldPassword())) {
                 Optional<User> modified = userService.editPassword(loggedUser.getId(), changePasswordRequest.getNewPassword());
                 if (modified.isPresent())
                     return ResponseEntity.ok(UserResponse.fromUser(modified.get()));
             } else {
-                // Lo ideal es que esto se gestionara de forma centralizada
-                // Se puede ver cómo hacerlo en la formación sobre Validación con Spring Boot
-                // y la formación sobre Gestión de Errores con Spring Boot
+                // Ideally this should be managed centrally
+                // You can see how to do it in the training on Validation with Spring Boot
+                // and training on Error Management with Spring Boot
                 throw new RuntimeException();
             }
         } catch (RuntimeException ex) {

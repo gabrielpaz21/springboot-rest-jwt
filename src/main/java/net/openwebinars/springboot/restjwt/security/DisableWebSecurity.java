@@ -13,5 +13,4 @@ public class DisableWebSecurity {
         return (web) -> web.ignoring().antMatchers("/**");
     }
 
-
 }*/

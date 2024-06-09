@@ -6,7 +6,7 @@ import org.hibernate.annotations.NaturalId;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -38,4 +38,3 @@ public class RefreshToken {
     private Instant createdAt;
 
 }
-
